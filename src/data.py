@@ -58,3 +58,9 @@ class DataProcessor:
 
 			return img_paths, label_paths
 
+  def _get_test_paths(self):
+    test_path = os.path.join(self.input_dir, 'test')
+    return sorted(glob(os.path.join(test_path, '*/images/*.tif')))
+
+  def __del__(self):
+    self.thread_pool.shutdown()
