@@ -41,4 +41,20 @@ class DataProcessor:
 
     return image_paths, label_paths
 
+  def _process_kidney_dir(self, kidney_dir):
+			base_path = os.path.join(self.input_dir, 'train', kidney_dir)
+			print(f"Checking directory: {base_path}")
+
+			if not os.path.exists(base_path):
+					return [], []
+
+			img_dir = os.path.join(base_path, 'images')
+			label_dir = os.path.join(base_path, 'labels')
+
+			img_paths = sorted(glob(os.path.join(img_dir, '*.tif')))
+			label_paths = sorted(glob(os.path.join(label_dir, '*.tif')))
+
+			print(f"Found {len(img_paths)} images and {len(label_paths)} labels in {kidney_dir}")
+
+			return img_paths, label_paths
 
