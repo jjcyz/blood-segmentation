@@ -42,21 +42,21 @@ class DataProcessor:
     return image_paths, label_paths
 
   def _process_kidney_dir(self, kidney_dir):
-			base_path = os.path.join(self.input_dir, 'train', kidney_dir)
-			print(f"Checking directory: {base_path}")
+    base_path = os.path.join(self.input_dir, 'train', kidney_dir)
+    print(f"Checking directory: {base_path}")
 
-			if not os.path.exists(base_path):
-					return [], []
+    if not os.path.exists(base_path):
+      return [], []
 
-			img_dir = os.path.join(base_path, 'images')
-			label_dir = os.path.join(base_path, 'labels')
+    img_dir = os.path.join(base_path, 'images')
+    label_dir = os.path.join(base_path, 'labels')
 
-			img_paths = sorted(glob(os.path.join(img_dir, '*.tif')))
-			label_paths = sorted(glob(os.path.join(label_dir, '*.tif')))
+    img_paths = sorted(glob(os.path.join(img_dir, '*.tif')))
+    label_paths = sorted(glob(os.path.join(label_dir, '*.tif')))
 
-			print(f"Found {len(img_paths)} images and {len(label_paths)} labels in {kidney_dir}")
+    print(f"Found {len(img_paths)} images and {len(label_paths)} labels in {kidney_dir}")
 
-			return img_paths, label_paths
+    return img_paths, label_paths
 
   def _get_test_paths(self):
     test_path = os.path.join(self.input_dir, 'test')
@@ -64,3 +64,20 @@ class DataProcessor:
 
   def __del__(self):
     self.thread_pool.shutdown()
+
+class MemoryEfficientSequence(tf.keras.utils.Sequence):
+  def __init__(self, image_paths, label_paths, batch_size=BATCH_SIZE):
+    super().__init__()
+    self.image_paths = [p for p in image_paths if os.path.exists(p)]
+    self.label_paths = [p for p in label_paths if os.path.exists(p)]
+    self.batch_size = batch_size
+    self.cache = {}
+    self.cache_size = CACHE_SIZE
+    self.valid_starts = self._find_valid_sequences()
+
+    if len(self.valid_starts) == 0:
+      raise ValueError("No valid sequences found in the dataset")
+
+    print(f"Total images found {len(self.image_paths)}")
+    print(f"Valid 3D sequence starts: {len(self.valid_starts)}")
+    self.on_epoch_end()
