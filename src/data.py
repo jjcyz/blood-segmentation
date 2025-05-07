@@ -81,3 +81,60 @@ class MemoryEfficientSequence(tf.keras.utils.Sequence):
     print(f"Total images found {len(self.image_paths)}")
     print(f"Valid 3D sequence starts: {len(self.valid_starts)}")
     self.on_epoch_end()
+
+  def _find_valid_sequences(self):
+    valid_starts = []
+    for i in range(len(self.image_paths) - PATCH_DEPTH + 1):
+      sequence_valid = True
+      for j in range(PATCH_DEPTH):
+        if not (os.path.exists(self.image_paths[i + j]) and
+                os.path.exists(self.label_paths[i + j])):
+          sequence_valid = False
+          break
+      if sequence_valid:
+        valid_starts.append(i)
+    return np.array(valid_starts)
+
+  def __len__(self):
+    return int(np.cell(len(self.valid_starts) / self.batch_size))
+
+  def __get_cached_image(self, path):
+    if path in self.cache:
+      return self.cache[path]
+
+    img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+    if img is None:
+      return np.zeros((PATCH_HEIGHT, PATCH_WIDTH), dtype=np.float32)
+
+    img = cv2.resize(img, (PATCH_WIDTH, PATCH_HEIGHT))
+    img = img.astype(np.float32) / 255.0
+    if len(self.cache) >= self.cache_size:
+      self.cache.pop(list(self.cache.keys())[0])
+    self.cache[path] = img
+    return img
+
+  def __getitem__(self, idx):
+    batch_starts = self.valid_starts[idx * self.batch_size:(idx + 1) * self.batch_size]
+    batch_x = np.zeros((len(batch_starts), PATCH_DEPTH, PATCH_HEIGHT, PATCH_WIDTH, 1), dtype=np.float32)
+    batch_y = np.zeros((len(batch_starts), PATCH_DEPTH, PATCH_HEIGHT, PATCH_WIDTH, 1), dtype=np.float32)
+
+    for i, start_idx in enumerate(batch_starts):
+      volume_x = np.zeros((PATCH_DEPTH, PATCH_HEIGHT, PATCH_WIDTH))
+      volume_y = np.zeros((PATCH_DEPTH, PATCH_HEIGHT, PATCH_WIDTH))
+
+      for j in range(PATCH_DEPTH):
+        idx = start_idx + j
+        volume_x[j] = self.__get_cached_image(self.image_paths[idx])
+        volume_y[j] = self.__get_cached_image(self.label_paths[idx])
+
+      batch_x[i] = volume_x[..., np.newaxis]
+      batch_y[i] = volume_y[..., np.newaxis]
+
+    return batch_x, batch_y
+
+  def on_epoch_end(self):
+    np.random.shuffle(self.valid_starts)
+    self.cache.clear()
+
+  def __del__(self):
+    self.cache.clear()
