@@ -17,8 +17,8 @@ mixed_precision.set_global_policy('mixed_float16')
 BATCH_SIZE = 8
 VALIDATION_SPLIT = 0.2
 WORKING_DIR = '/kaggle/working'
-INPUT_DIR = '/kaggle/input/blood-vessel-segmentation'
-OUTPUT_DIR = '/kaggle/working/output'
+INPUT_DIR = 'data/train'
+OUTPUT_DIR = 'output'
 EPOCHS = 50
 
 def train_model(resume_from=None):

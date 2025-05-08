@@ -12,7 +12,7 @@ def conv_block(x, filters):
 
   return x
 
-def create_memory_efficient_unet(input_shape):
+def create_memory_efficient_unet3d(input_shape):
   inputs = tf.keras.Input(shape=input_shape, dtype=tf.float32)
 
   # Encoder

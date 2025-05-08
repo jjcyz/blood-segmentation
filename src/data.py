@@ -14,7 +14,7 @@ BATCH_SIZE = 8
 NUM_WORKERS = 4
 CACHE_SIZE = 150
 
-class DataProcessor:
+class DataPreprocessor:
   def __init__(self, input_dir):
     self.input_dir = input_dir
     self.thread_pool = ThreadPoolExecutor(max_workers=NUM_WORKERS)
