@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 # Constants
 PATCH_WIDTH = 64
 PATCH_HEIGHT = 64
-PATCH_DEPTH = 16
+PATCH_DEPTH = 4
 BATCH_SIZE = 8
 NUM_WORKERS = 4
 CACHE_SIZE = 150
@@ -31,10 +31,11 @@ class DataPreprocessor:
     image_paths = []
     label_paths = []
 
-    kidney_dirs = ['kidney_1_dense', 'kidney_2', 'kidney_3_sparse']
+    # kidney_dirs = ['kidney_1_dense', 'kidney_2', 'kidney_3_sparse']
+    kidney_dirs = ['kidney_1_dense']
 
     for kidney_dir in kidney_dirs:
-      img_paths, lbl_paths = self._get_kidney_paths(kidney_dir)
+      img_paths, lbl_paths = self._process_kidney_dir(kidney_dir)
       if img_paths and lbl_paths:
         image_paths.extend(img_paths)
         label_paths.extend(lbl_paths)
@@ -80,6 +81,10 @@ class MemoryEfficientSequence(tf.keras.utils.Sequence):
 
     print(f"Total images found {len(self.image_paths)}")
     print(f"Valid 3D sequence starts: {len(self.valid_starts)}")
+    print(f"image_paths: {self.image_paths}")
+    print(f"label_paths: {self.label_paths}")
+    print(f"PATCH_DEPTH: {PATCH_DEPTH}")
+    print(f"valid_starts: {self.valid_starts}")
     self.on_epoch_end()
 
   def _find_valid_sequences(self):
@@ -87,8 +92,9 @@ class MemoryEfficientSequence(tf.keras.utils.Sequence):
     for i in range(len(self.image_paths) - PATCH_DEPTH + 1):
       sequence_valid = True
       for j in range(PATCH_DEPTH):
-        if not (os.path.exists(self.image_paths[i + j]) and
-                os.path.exists(self.label_paths[i + j])):
+        idx = i + j
+        if not (os.path.exists(self.image_paths[idx]) and
+                os.path.exists(self.label_paths[idx])):
           sequence_valid = False
           break
       if sequence_valid:
@@ -96,7 +102,7 @@ class MemoryEfficientSequence(tf.keras.utils.Sequence):
     return np.array(valid_starts)
 
   def __len__(self):
-    return int(np.cell(len(self.valid_starts) / self.batch_size))
+    return int(np.ceil(len(self.valid_starts) / self.batch_size))
 
   def __get_cached_image(self, path):
     if path in self.cache:

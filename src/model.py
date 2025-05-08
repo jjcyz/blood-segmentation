@@ -6,7 +6,7 @@ def conv_block(x, filters):
   x = tf.keras.layers.BatchNormalization()(x)
   x = tf.keras.layers.ReLU()(x)
 
-  x = tf.keras.layers.Conv3D(filter, 3, padding='same')(x)
+  x = tf.keras.layers.Conv3D(filters, 3, padding='same')(x)
   x = tf.keras.layers.BatchNormalization()(x)
   x = tf.keras.layers.ReLU()(x)
 
@@ -35,7 +35,7 @@ def create_memory_efficient_unet3d(input_shape):
 
   outputs = tf.keras.layers.Conv3D(1, 1, activation='sigmoid')(conv5)
 
-  return tf.keras.Model(input=[inputs], outputs=[outputs])
+  return tf.keras.Model(inputs=[inputs], outputs=[outputs])
 
 
 

@@ -17,7 +17,7 @@ mixed_precision.set_global_policy('mixed_float16')
 BATCH_SIZE = 8
 VALIDATION_SPLIT = 0.2
 WORKING_DIR = '/kaggle/working'
-INPUT_DIR = 'data/train'
+INPUT_DIR = 'data'
 OUTPUT_DIR = 'output'
 EPOCHS = 50
 
