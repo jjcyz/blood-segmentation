@@ -10,8 +10,8 @@ from .data import DataPreprocessor, MemoryEfficientSequence
 from .metrics import MetricsCollection
 from .utils import PerformanceMonitor, MemoryCleanupCallback
 
-# Enable mixed precision for better GPU performance
-mixed_precision.set_global_policy('mixed_float16')
+# Enable mixed precision for better GPU performance (TensorFlow on CPU does not support mixed precision)
+# mixed_precision.set_global_policy('mixed_float16')
 
 # Constants
 BATCH_SIZE = 8
@@ -38,15 +38,17 @@ def train_model(resume_from=None):
     preprocessor = DataPreprocessor(INPUT_DIR)
     image_paths, label_paths = preprocessor.get_file_paths('train')
 
-    split_idx = int(len(image_paths) * 0.8)
-    train_generator = MemoryEfficientSequence(
-        image_paths[:split_idx],
-        label_paths[:split_idx]
-    )
-    val_generator = MemoryEfficientSequence(
-        image_paths[split_idx:],
-        label_paths[split_idx:]
-    )
+    # split_idx = int(len(image_paths) * 0.8)
+    # train_generator = MemoryEfficientSequence(
+    #     image_paths[:split_idx],
+    #     label_paths[:split_idx]
+    # )
+    # val_generator = MemoryEfficientSequence(
+    #     image_paths[split_idx:],
+    #     label_paths[split_idx:]
+    # )
+    train_generator = MemoryEfficientSequence(image_paths, label_paths)
+    val_generator = None
 
     input_shape = (16, 64, 64, 1)
     model = create_memory_efficient_unet3d(input_shape)
